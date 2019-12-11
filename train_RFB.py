@@ -36,7 +36,7 @@ args = parser.parse_args()
 if not os.path.exists(args.save_folder):
     os.mkdir(args.save_folder)
 
-img_dim = 300
+img_dim = 300   //input:3*300*300
 p = 0.5
 train_sets = [('2007', 'person_trainval'), ('2012', 'person_trainval')]
 cfg = VOC_Config
@@ -54,13 +54,13 @@ writer = SummaryWriter(log_dir=log_path)
 net = build_net('train', img_dim, num_classes=2)
 
 if args.ngpu > 1:
-    net = torch.nn.DataParallel(net)
+    net = torch.nn.DataParallel(net)  // better to use nn.DistruteParallel  
 
-net.cuda()
+net.cuda()  // better to use net.to(device)
 cudnn.benchmark = True
 
 optimizer = optim.SGD(net.parameters(), lr=args.lr,
-                      momentum=0.9, weight_decay=1e-4)
+                      momentum=0.9, weight_decay=1e-4)  // could write a func to smoothly change lr
 
 criterion = MultiBoxLoss(num_classes=2,
                          overlap_thresh=0.4,
@@ -69,12 +69,12 @@ criterion = MultiBoxLoss(num_classes=2,
                          neg_mining=True,
                          neg_pos=3,
                          neg_overlap=0.3,
-                         encode_target=False)
+                         encode_target=False)  //define a class to calculte loss,in forward 
 
 priorbox = PriorBox(cfg)
 with torch.no_grad():
     priors = priorbox.forward()
-    priors = priors.cuda()
+    priors = priors.cuda() //GT
 
 
 def train():
